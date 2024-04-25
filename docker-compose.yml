@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  naya-api:
+    build: ./naya-api
+    container_name: naya-api
+    ports:
+      - "8080:8080"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/naya
+    depends_on:
+      - mongodb
+
+  naya-web:
+    build:
+      context: ./naya-web
+      args:
+        REACT_APP_APIURL: http://naya-api:8080
+    container_name: naya-web
+    ports:
+      - "3000:3000"
+    depends_on:
+      - naya-api
+  test:
+    build: ./test
+    depends_on:
+      - naya-api
+      - naya-web
+    stdin_open: true
+    tty: true
+
+volumes:
+  mongodb_data:
